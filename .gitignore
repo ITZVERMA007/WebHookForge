@@ -1,0 +1,5 @@
+node_modules/
+.env
+/generated/prisma
+dist/
+WEBHOOKFORGE_BUILD_GUIDE.md

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebHookForge — Dashboard</title>
+    <style>
+        /*CSS Reset + Variables*/
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --border: #2a2a3e;
+            --text-primary: #e4e4f0;
+            --text-secondary: #8888a0;
+            --accent: #6c63ff;
+            --accent-hover: #5a52e0;
+            --success: #4ade80;
+            --danger: #ef4444;
+            --warning: #fbbf24;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --font-sans: 'Inter', -apple-system, sans-serif;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /*Header*/
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            background-clip:text;
+            -webkit-background-clip: text;
+            color:transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        #connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            transition: background 0.3s;
+        }
+
+        #connection-dot.connected {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        /*Stats Bar*/
+        .stats-bar {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat {
+            background: var(--bg-card);
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /*Main Content*/
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /*Webhook List*/
+        #webhook-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .webhook-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .webhook-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .webhook-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .webhook-method {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: var(--accent);
+            color: white;
+        }
+
+        .webhook-relay {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .webhook-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .webhook-id {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .webhook-status {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .status-received { background: rgba(74, 222, 128, 0.15); color: var(--success); }
+        .status-replayed { background: rgba(108, 99, 255, 0.15); color: var(--accent); }
+        .status-failed   { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+        /*Detail Panel*/
+        .detail-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .detail-panel.active { display: block; }
+
+        .detail-section { margin-bottom: 1rem; }
+
+        .detail-section h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        pre {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            border: 1px solid var(--border);
+        }
+
+        /*Buttons*/
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+        .btn-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
+
+        /*Empty State*/
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
+        .empty-state h2 { margin-bottom: 0.5rem; color: var(--text-primary); }
+        .empty-state code {
+            display: inline-block;
+            background: var(--bg-card);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        /*Pagination*/
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; }
+
+        /*Animations*/
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .webhook-card { animation: fadeIn 0.3s ease-out; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>🔨 WebHookForge</h1>
+        <div id="connection-status">
+            <div id="connection-dot"></div>
+            <span id="connection-text">Disconnected</span>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-label">Total Webhooks</div>
+            <div class="stat-value" id="stat-total">–</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Current Page</div>
+            <div class="stat-value" id="stat-page">–</div>
+        </div>
+    </div>
+
+    <main>
+        <div id="webhook-list"></div>
+        <div id="detail-panel" class="detail-panel"></div>
+        <div class="pagination" id="pagination"></div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

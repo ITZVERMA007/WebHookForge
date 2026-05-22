@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Webhook {
+
+  id String @id
+  relayId String @map("relay_id")
+  method String @default("POST")
+  headers Json
+  body Json?
+  query Json?
+  sourceIp String? @map("source_ip")  
+  timestamp DateTime @default(now())
+  status String @default("received")
+
+  @@index([relayId])
+  @@index([timestamp(sort: Desc)])
+
+  @@map("webhooks")
+}
