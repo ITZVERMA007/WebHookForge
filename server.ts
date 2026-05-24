@@ -5,6 +5,7 @@ import webhookRouter from './routes/webhook';
 import webhooksRouter from './routes/webhooks';
 import { notFoundHandler,errorHandler } from './middleware/error';
 import { fileURLToPath } from 'url';
+import { setUpWebSocket } from './ws/server';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,5 +64,8 @@ const server = app.listen(PORT, () => {
     console.log(`-d '{"event":"ping"}'`);
     console.log('');
 });
+
+// Attaching WebSocket to the same HTTP server
+setUpWebSocket(server);
 
 export default app;

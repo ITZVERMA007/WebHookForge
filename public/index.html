@@ -275,10 +275,36 @@
 
     <main>
         <div id="webhook-list"></div>
-        <div id="detail-panel" class="detail-panel"></div>
+        <div id="detail-panel" class="detail-panel">
+            <div class="detail-section">
+        <h3>Webhook Info</h3>
+        <p><strong>ID:</strong> <span id="detail-id"></span></p>
+        <p><strong>Relay:</strong> <span id="detail-relay"></span></p>
+        <p><strong>Method:</strong> <span id="detail-method"></span></p>
+        <p><strong>Status:</strong> <span id="detail-status"></span></p>
+        <p><strong>Time:</strong> <span id="detail-time"></span></p>
+        <p><strong>Source IP:</strong> <span id="detail-ip"></span></p>
+    </div>
+
+    <div class="detail-section">
+        <h3>Headers</h3>
+        <pre><code id="detail-headers">(empty)</code></pre>
+    </div>
+
+    <div class="detail-section">
+        <h3>Body</h3>
+        <pre><code id="detail-body">(empty)</code></pre>
+    </div>
+
+    <div class="btn-group">
+        <button id="replay-btn" class="btn btn-primary" onclick="replaySelectedWebhook()">🔁 Replay</button>
+        <button id="delete-btn" class="btn btn-danger" onclick="deleteSelectedWebhook()">🗑️ Delete</button>
+    </div>
+        </div>
         <div class="pagination" id="pagination"></div>
     </main>
 
     <script src="app.js"></script>
+    <script src="socket.js"></script>
 </body>
 </html>

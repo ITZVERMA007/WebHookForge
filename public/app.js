@@ -39,7 +39,7 @@ async function fetchWebhooks(page = 1) {
         currentPage = page;
     } catch (err) {
         console.error('Failed to fetch webhooks:', err);
-        listEl.innerHTML = `<div class="empty-state"><h2>⚠️ Error</h2><p>${escapeHTML(err.message)}</p></div>`;
+        listEl.innerHTML = `<div class="empty-state"><h2>Error</h2><p>${escapeHTML(err.message)}</p></div>`;
     }
 }
 
@@ -49,18 +49,19 @@ async function showDetail(id) {
     try {
         const response = await fetch(`/api/webhooks/${id}`);
         if (!response.ok) throw new Error('Webhook not found');
-        const wh = await response.json();
+        const json = await response.json();
+        const wh = json.data;
 
         // Safe rendering with escapeHTML for untrusted, dynamic inputs
         detailEl.innerHTML = `
             <div class="detail-section">
                 <h3>Webhook Info</h3>
                 <p><strong>ID:</strong> ${escapeHTML(wh.id)}</p>
-                <p><strong>Relay:</strong> /w/${escapeHTML(wh.relay_id)}</p>
+                <p><strong>Relay:</strong> /w/${escapeHTML(wh.relayId || wh.relay_id)}</p>
                 <p><strong>Method:</strong> ${escapeHTML(wh.method)}</p>
                 <p><strong>Status:</strong> <span class="webhook-status status-${escapeHTML(wh.status)}">${escapeHTML(wh.status)}</span></p>
                 <p><strong>Time:</strong> ${new Date(wh.timestamp).toLocaleString()}</p>
-                <p><strong>Source IP:</strong> ${escapeHTML(wh.source_ip || 'unknown')}</p>
+                <p><strong>Source IP:</strong> ${escapeHTML(wh.sourceIp || wh.source_ip || 'unknown')}</p>
             </div>
             <div class="detail-section">
                 <h3>Headers</h3>
@@ -97,7 +98,7 @@ async function deleteWebhook(id, event) {
     const btn = event.target;
     const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '⏳ Deleting...';
+    btn.innerHTML = 'Deleting!';
 
     try {
         const response = await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });
@@ -124,7 +125,7 @@ async function replayWebhook(id, event) {
     const btn = event.target;
     const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '⏳ Replaying...';
+    btn.innerHTML = 'Replaying!';
 
     try {
         const response = await fetch(`/api/webhooks/${id}/replay`, {
@@ -166,7 +167,7 @@ function renderWebhooks(webhooks) {
             <div class="webhook-card-header">
                 <div>
                     <span class="webhook-method">${escapeHTML(wh.method)}</span>
-                    <span class="webhook-relay">/w/${escapeHTML(wh.relay_id)}</span>
+                    <span class="webhook-relay">/w/${escapeHTML(wh.relayId || wh.relay_id)}</span>
                 </div>
                 <span class="webhook-status status-${escapeHTML(wh.status)}">${escapeHTML(wh.status)}</span>
             </div>

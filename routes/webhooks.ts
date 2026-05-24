@@ -87,7 +87,7 @@ router.delete('/webhooks/:id', async (req: Request, res: Response, next: NextFun
 
         res.status(204).end();
     } catch (error) {
-        next()
+        next(error);
     }
 });
 
