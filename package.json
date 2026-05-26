@@ -1,6 +1,6 @@
 {
   "name": "webhookforge-parth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A webhook relay and debugger",
   "main": "dist/server.js",
   "bin": {
