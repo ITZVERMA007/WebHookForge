@@ -1,23 +1,29 @@
 {
-  "name": "webhookforge",
+  "name": "webhookforge-parth",
   "version": "1.0.0",
-  "description": "Webhook handler project",
+  "description": "A webhook relay and debugger",
   "main": "dist/server.js",
+  "bin": {
+    "webhookforge": "./dist/cli.js"
+  },
   "scripts": {
+    "start": "node dist/cli.js listen",
     "dev": "tsx watch server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start:prod": "node dist/cli.js listen"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "webhook",
+    "relay",
+    "debugger"
+  ],
+  "author": "Parth Verma",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "dotenv": "^17.4.2",
+    "commander": "^14.0.3",
     "express": "^5.2.1",
-    "pg": "^8.20.0",
     "uuid": "^14.0.0",
     "ws": "^8.21.0"
   },
@@ -28,5 +34,9 @@
     "prisma": "^7.8.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "public"
+  ]
 }

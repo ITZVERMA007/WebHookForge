@@ -1,5 +1,20 @@
+# Dependencies
 node_modules/
+
+# Environments & Leftovers
 .env
-/generated/prisma
-dist/
+/generated/
 WEBHOOKFORGE_BUILD_GUIDE.md
+
+# Build Output
+dist/
+
+# SQLite Database Files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# System Debris
+.DS_Store
+*.log
