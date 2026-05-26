@@ -24,15 +24,15 @@ export function notFoundHandler(
 // Global error handler 
 export function errorHandler(err:HttpError,req:Request,res:Response,next:NextFunction): void{
 
-  console.log(`ERROR--> ${req.method} ${req.originalUrl}:`,err);
+  console.error(`ERROR--> ${req.method} ${req.originalUrl}:`,err.message);
 
   const statusCode = err.statusCode || err.status || 500;
 
   res.status(statusCode).json({
-    error:err.name || "Internal Server Name",
+    error:err.name || "Internal Server Error",
     message: err.message || "Something went wrong",
     
     // stack trace for development mode 
-    ...(process.env.NODE_ENV === "development") && {stack:err.stack}
+    ...(process.env.NODE_ENV === "development" ? {stack: err.stack}:{})
   });
 }

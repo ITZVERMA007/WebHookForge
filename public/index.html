@@ -9,14 +9,14 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a2e;
-            --border: #2a2a3e;
-            --text-primary: #e4e4f0;
-            --text-secondary: #8888a0;
-            --accent: #6c63ff;
-            --accent-hover: #5a52e0;
+            --bg-primary: #110f0c;
+            --bg-secondary: #171410;
+            --bg-card: #1f1b14;
+            --border: #2a2318;
+            --text-primary: #f5f0e8;
+            --text-secondary: #b8a99a;
+            --accent: #e8a842;
+            --accent-hover: #c98e2e;
             --success: #4ade80;
             --danger: #ef4444;
             --warning: #fbbf24;
@@ -45,11 +45,7 @@
 
         header h1 {
             font-size: 1.5rem;
-            background: linear-gradient(135deg, var(--accent), #a78bfa);
-            background-clip:text;
-            -webkit-background-clip: text;
-            color:transparent;
-            -webkit-text-fill-color: transparent;
+            color: var(--accent);
         }
 
         #connection-status {
@@ -144,7 +140,7 @@
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
             background: var(--accent);
-            color: white;
+            color: #1a1208;
         }
 
         .webhook-relay {
@@ -171,7 +167,7 @@
         }
 
         .status-received { background: rgba(74, 222, 128, 0.15); color: var(--success); }
-        .status-replayed { background: rgba(108, 99, 255, 0.15); color: var(--accent); }
+        .status-replayed { background: rgba(232, 168, 66, 0.15); color: var(--accent); }
         .status-failed   { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
 
         /*Detail Panel*/
@@ -220,7 +216,7 @@
 
         .btn:active { transform: scale(0.97); }
 
-        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary { background: var(--accent); color: #1a1208; }
         .btn-primary:hover { background: var(--accent-hover); }
         .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
@@ -275,32 +271,7 @@
 
     <main>
         <div id="webhook-list"></div>
-        <div id="detail-panel" class="detail-panel">
-            <div class="detail-section">
-        <h3>Webhook Info</h3>
-        <p><strong>ID:</strong> <span id="detail-id"></span></p>
-        <p><strong>Relay:</strong> <span id="detail-relay"></span></p>
-        <p><strong>Method:</strong> <span id="detail-method"></span></p>
-        <p><strong>Status:</strong> <span id="detail-status"></span></p>
-        <p><strong>Time:</strong> <span id="detail-time"></span></p>
-        <p><strong>Source IP:</strong> <span id="detail-ip"></span></p>
-    </div>
-
-    <div class="detail-section">
-        <h3>Headers</h3>
-        <pre><code id="detail-headers">(empty)</code></pre>
-    </div>
-
-    <div class="detail-section">
-        <h3>Body</h3>
-        <pre><code id="detail-body">(empty)</code></pre>
-    </div>
-
-    <div class="btn-group">
-        <button id="replay-btn" class="btn btn-primary" onclick="replaySelectedWebhook()">🔁 Replay</button>
-        <button id="delete-btn" class="btn btn-danger" onclick="deleteSelectedWebhook()">🗑️ Delete</button>
-    </div>
-        </div>
+        <div id="detail-panel" class="detail-panel"></div>
         <div class="pagination" id="pagination"></div>
     </main>
 

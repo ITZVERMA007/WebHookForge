@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { clients,ExtWebSocket } from "./server";
+import { clients,ExtWebSocket } from "./server.js";
 
 // Broadcast message to all connected clients or specific client
 export function broadcast(
@@ -28,6 +28,7 @@ export function broadcast(
                 sent++;
             } catch (err) {
                 console.error('[WS] Failed to send to client:',(err as Error).message);
+                // Removing dead clients preventing high memory usage
                 clients.delete(client);
                 failed++;
             }

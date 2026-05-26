@@ -1,8 +1,7 @@
 import { Router, Request, Response, NextFunction, raw } from 'express';
-import { Prisma } from '../generated/prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import * as db from '../db';
-import { broadcast } from '../ws/broadcast';
+import * as db from '../db.js';
+import { broadcast } from '../ws/broadcast.js';
 
 const router = Router();
 
@@ -16,9 +15,9 @@ router.all('/w/:relayId', async (req: Request, res: Response,next:NextFunction) 
         id: uuidv4(),
         relay_id: relayId as string,
         method: req.method,
-        headers: req.headers as Prisma.InputJsonObject,
-        body: req.body as Prisma.InputJsonObject,
-        query: req.query as Prisma.InputJsonObject,
+        headers: req.headers as Record<string, unknown>,
+        body: req.body as Record<string, unknown> | null,
+        query: req.query as Record<string, unknown> | null,
         source_ip: trueIp as string || null,
         timestamp: new Date().toISOString(),
         status: "received"
@@ -28,7 +27,7 @@ router.all('/w/:relayId', async (req: Request, res: Response,next:NextFunction) 
         await db.insert(webhook);
         console.log(`[WEBHOOK]Received on relay ${relayId} -> ${webhook.id}`);
 
-        broadcast('new_webhook',webhook,relayId as string);
+        broadcast('new_webhook',webhook);
         res.status(200).json({
             success: true,
             id: webhook.id,

@@ -1,30 +1,19 @@
-import { PrismaClient, Prisma } from './generated/prisma/client';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-import 'dotenv/config';
-
-// Initialising the connection pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10, // prevents connection exhaustion
-});
-
-const adapter = new PrismaPg(pool);
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient({
-    adapter,
-    log: ['info', 'warn', 'error'],
+    log: ['error'], 
 });
 
-console.log('[DB] Prisma client initialised');
+console.log('[DB] SQLite database initialized');
 
+// Interface for the webhook
 export interface WebhookInput {
     id: string;
     relay_id: string;
     method: string;
-    headers: Prisma.InputJsonObject;
-    body?: Prisma.InputJsonObject | null;
-    query?: Prisma.InputJsonObject | null;
+    headers: Record<string, unknown>;
+    body?: Record<string, unknown> | null;
+    query?: Record<string, unknown> | null;
     source_ip: string | null;
     timestamp: string;
     status: string;
@@ -34,18 +23,28 @@ interface DbResult {
     changes: number;
 }
 
+// ── Helper: Parse SQLite Strings back to JSON ──
+function formatWebhookData(webhook: any) {
+    if (!webhook) return null;
+    return {
+        ...webhook,
+        headers: webhook.headers ? JSON.parse(webhook.headers) : {},
+        body: webhook.body ? JSON.parse(webhook.body) : null,
+        query: webhook.query ? JSON.parse(webhook.query) : null,
+    };
+}
 
 // Function to insert a new webhook into the database
-export async function insert(webhook: WebhookInput):
-    Promise<DbResult> {
+export async function insert(webhook: WebhookInput): Promise<DbResult> {
     await prisma.webhook.create({
         data: {
             id: webhook.id,
             relayId: webhook.relay_id,
             method: webhook.method,
-            headers: webhook.headers,
-            body: webhook.body || undefined,
-            query: webhook.query || undefined,
+            // Convert JSON objects to strings for SQLite
+            headers: JSON.stringify(webhook.headers),
+            body: webhook.body ? JSON.stringify(webhook.body) : undefined,
+            query: webhook.query ? JSON.stringify(webhook.query) : undefined,
             sourceIp: webhook.source_ip,
             timestamp: new Date(webhook.timestamp),
             status: webhook.status,
@@ -54,37 +53,36 @@ export async function insert(webhook: WebhookInput):
     return { changes: 1 };
 }
 
-
 // Function to get all webhooks with pagination
 export async function getAll(limit: number = 20, offset: number = 0) {
-    return prisma.webhook.findMany({
+    const webhooks = await prisma.webhook.findMany({
         orderBy: { timestamp: 'desc' },
         take: limit,
         skip: offset,
     });
+    return webhooks.map(formatWebhookData);
 }
 
-
-// Function to get webhook by it's id
+// Function to get webhook by its id
 export async function getById(id: string) {
-    return prisma.webhook.findUnique({
+    const webhook = await prisma.webhook.findUnique({
         where: { id },
     });
+    return formatWebhookData(webhook);
 }
-
 
 // Function to get all webhooks for a specific relay ID
 export async function getByRelayId(relayId: string, limit: number = 20, offset: number = 0) {
-    return prisma.webhook.findMany({
+    const webhooks = await prisma.webhook.findMany({
         where: { relayId },
         orderBy: { timestamp: 'desc' },
         take: limit,
         skip: offset,
     });
+    return webhooks.map(formatWebhookData);
 }
 
-
-// Function to delete a webhook by it's ID
+// Function to delete a webhook by its ID
 export async function deleteById(id: string): Promise<DbResult> {
     try {
         await prisma.webhook.delete({
@@ -99,12 +97,10 @@ export async function deleteById(id: string): Promise<DbResult> {
     }
 }
 
-
 // Function to get total count of all webhooks 
 export async function count(): Promise<number> {
     return await prisma.webhook.count();
 }
-
 
 // Function to get total count for a relayId
 export async function countByRelayId(relayId: string) {

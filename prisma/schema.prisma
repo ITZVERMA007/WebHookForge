@@ -5,11 +5,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url = "file:./dev.db"
 }
 
 model Webhook {
@@ -17,9 +17,9 @@ model Webhook {
   id String @id
   relayId String @map("relay_id")
   method String @default("POST")
-  headers Json
-  body Json?
-  query Json?
+  headers String
+  body String?
+  query String?
   sourceIp String? @map("source_ip")  
   timestamp DateTime @default(now())
   status String @default("received")

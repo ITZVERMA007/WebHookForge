@@ -1,16 +1,18 @@
-import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import path from "path";
-import webhookRouter from './routes/webhook';
-import webhooksRouter from './routes/webhooks';
-import { notFoundHandler,errorHandler } from './middleware/error';
+import webhookRouter from './routes/webhook.js';
+import webhooksRouter from './routes/webhooks.js';
+import replayRouter from './routes/replay.js';
+import { notFoundHandler,errorHandler } from './middleware/error.js';
 import { fileURLToPath } from 'url';
-import { setUpWebSocket } from './ws/server';
+import { setUpWebSocket } from './ws/server.js';
+import http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);// we are creating the server to attach the websocket to it and hence the CLI will be calling the server
 
 // Middleware
 app.use(express.json({
@@ -34,15 +36,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 
 // Static file 
-app.use(express.static(path.join(__dirname,'public')));
+app.use(express.static(path.join(__dirname,'../public')));
 
 // Routes
 app.use('/', webhookRouter);
 app.use('/api',webhooksRouter);
+app.use('/api',replayRouter);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', timestamp: new Date().toISOString(),uptime:process.uptime() });
 });
 
 // Erro Handling
@@ -50,22 +53,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.use(notFoundHandler); // 404 Error
 app.use(errorHandler); // 500 error
 
-// Server starting
-const PORT = parseInt(process.env.PORT || '3000', 10);
-
-const server = app.listen(PORT, () => {
-    console.log('');
-    console.log('WebhookForge is running');
-    console.log(`http://localhost:${PORT}`);
-    console.log('');
-    console.log('Try sending a test webhook:');
-    console.log(`curl -X POST http://localhost:${PORT}/w/test123`);
-    console.log(`-H "Content-Type: application/json"`);
-    console.log(`-d '{"event":"ping"}'`);
-    console.log('');
-});
-
 // Attaching WebSocket to the same HTTP server
 setUpWebSocket(server);
 
-export default app;
+export {app,server};

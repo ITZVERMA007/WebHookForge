@@ -77,8 +77,8 @@ async function showDetail(id) {
                 <pre>${escapeHTML(JSON.stringify(wh.query, null, 2))}</pre>
             </div>` : ''}
             <div class="btn-group">
-                <button class="btn btn-primary" onclick="replayWebhook('${wh.id}', event)">🔄 Replay</button>
-                <button class="btn btn-danger" onclick="deleteWebhook('${wh.id}', event)">🗑️ Delete</button>
+                <button class="btn btn-primary" onclick="replayWebhook('${escapeHTML(wh.id)}', event)">🔄 Replay</button>
+                <button class="btn btn-danger" onclick="deleteWebhook('${escapeHTML(wh.id)}', event)">🗑️ Delete</button>
             </div>`;
 
         detailEl.classList.add('active');
@@ -157,7 +157,7 @@ function renderWebhooks(webhooks) {
             <div class="empty-state">
                 <h2>No webhooks yet</h2>
                 <p>Send your first webhook to get started:</p>
-                <code>curl -X POST http://localhost:3000/w/test -H "Content-Type: application/json" -d '{"event":"ping"}'</code>
+                <code>curl -X POST http://${window.location.host}/w/test -H "Content-Type: application/json" -d '{"event":"ping"}'</code>
             </div>`;
         return;
     }

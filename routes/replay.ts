@@ -1,5 +1,5 @@
 import {Router, Response,Request} from "express";
-import * as db from "../db";
+import * as db from "../db.js";
 const router = Router();
 
 router.post('/webhooks/:id/replay',async(req:Request,res:Response)=>{
@@ -46,17 +46,25 @@ router.post('/webhooks/:id/replay',async(req:Request,res:Response)=>{
         delete forwardHeaders['content-length'];
         delete forwardHeaders['connection']
 
-        const response = await fetch(target_url,{
+        const method = (webhook.method || 'POST').toUpperCase();
+
+        const fetchOptions: RequestInit={
             method:webhook.method || 'POST',
             headers:{
                 ...forwardHeaders,
-                'Content-Type':originalHeaders
-                ['content-type'] || 'application/json',
+                'Content-Type':originalHeaders['content-type'] || 'application/json',
                 'X-WebhookForge-Replay':'true',
                 'X-WebhookForge-Original-Id':webhook.id,
-            },
-            body: JSON.stringify(originalBody),
-        });
+            }
+        };
+
+        // Body included only when the request is POST request
+        if (method !== 'GET' && method !== 'HEAD'){
+            fetchOptions.body = originalBody ? JSON.stringify(originalBody) : undefined;
+        }
+
+        const response = await fetch(target_url,fetchOptions
+        );
 
         // Reading target's response
         const responseBody = await response.text();
