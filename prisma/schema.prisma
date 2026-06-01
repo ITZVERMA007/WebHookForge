@@ -19,6 +19,7 @@ model Webhook {
   method String @default("POST")
   headers String
   body String?
+  rawBody String?
   query String?
   sourceIp String? @map("source_ip")  
   timestamp DateTime @default(now())
