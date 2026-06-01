@@ -23,7 +23,7 @@
   "type": "module",
   "dependencies": {
     "@ngrok/ngrok": "^1.7.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^6.19.3",
     "commander": "^14.0.3",
     "express": "^5.2.1",
     "uuid": "^14.0.0",

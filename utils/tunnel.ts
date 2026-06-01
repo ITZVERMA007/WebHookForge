@@ -1,9 +1,9 @@
 import ngrok from '@ngrok/ngrok';
 import { getToken } from './config.js';
 
-export async function createTunnel(port: number): Promise<string | null>{
+export async function createTunnel(port: number): Promise<string | null> {
     try {
-        
+
         // Checking for the token in the config file created
         const authToken = getToken() || process.env.NGROK_AUTHTOKEN;
 
@@ -15,7 +15,7 @@ export async function createTunnel(port: number): Promise<string | null>{
             return null;
         }
         // Creating the Ngrok tunnel
-        const listener = await ngrok.forward({ 
+        const listener = await ngrok.forward({
             addr: port,
             authtoken: authToken,
         }); // listener object contains the information about the tunnel
@@ -23,14 +23,14 @@ export async function createTunnel(port: number): Promise<string | null>{
         const publicUrl = listener.url(); // Returns the url for the data transfer
 
         // Ctrl + c command closes the tunnel
-        process.on('SIGINT',async()=>{
+        process.on('SIGINT', async () => {
             console.log('\n Closing Ngrok tunnel safely...');
             await ngrok.disconnect();
             process.exit(0);
         });
 
         return publicUrl || null;
-    } catch (error : any) {
+    } catch (error: any) {
         console.error('\n [Tunnel Error] Failed to establish Ngrok tunnel.');
         console.error(` Reason: ${error.message}`);
         return null;

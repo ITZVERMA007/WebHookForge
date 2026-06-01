@@ -18,15 +18,15 @@ function connectWebSocket() {
     ws.onmessage = (event) => {
         try {
             const message = JSON.parse(event.data);
-            
-            if (message.type === 'NEW_WEBHOOK') {
+
+            if (message.type === 'new_webhook') {
                 console.log('[WS] New webhook received!');
-                
+
                 // This keeps pagination and UI rendering perfectly in sync.
                 if (typeof fetchWebhooks === 'function') {
-                    fetchWebhooks(currentPage); 
+                    fetchWebhooks(currentPage);
                 }
-            } 
+            }
             else if (message.type === 'connected') {
                 console.log(`[WS] ${message.message} (${message.clients} clients)`);
             }
