@@ -5,7 +5,6 @@ const limit = 20;
 
 // 2. DOM Elements
 const listEl = document.getElementById('webhook-list');
-const detailEl = document.getElementById('detail-panel');
 const paginationEl = document.getElementById('pagination');
 const statTotal = document.getElementById('stat-total');
 const statPage = document.getElementById('stat-page');
@@ -33,7 +32,7 @@ async function fetchWebhooks(page = 1) {
         const data = await response.json();
         renderWebhooks(data.data);
         renderPagination(data.pagination);
-        
+
         statTotal.textContent = data.pagination.total;
         statPage.textContent = `${data.pagination.page} / ${data.pagination.totalPages || 1}`;
         currentPage = page;
@@ -44,56 +43,72 @@ async function fetchWebhooks(page = 1) {
 }
 
 
-// Show webhook detail
-async function showDetail(id) {
-    try {
-        const response = await fetch(`/api/webhooks/${id}`);
-        if (!response.ok) throw new Error('Webhook not found');
-        const json = await response.json();
-        const wh = json.data;
+// Toggle webhook detail
+async function toggleDetail(id) {
+    const detailEl = document.getElementById(`detail-${id}`);
+    const iconEl = document.getElementById(`icon-${id}`);
+    const cardEl = document.getElementById(`card-${id}`);
 
-        // Safe rendering with escapeHTML for untrusted, dynamic inputs
-        detailEl.innerHTML = `
-            <div class="detail-section">
-                <h3>Webhook Info</h3>
-                <p><strong>ID:</strong> ${escapeHTML(wh.id)}</p>
-                <p><strong>Relay:</strong> /w/${escapeHTML(wh.relayId || wh.relay_id)}</p>
-                <p><strong>Method:</strong> ${escapeHTML(wh.method)}</p>
-                <p><strong>Status:</strong> <span class="webhook-status status-${escapeHTML(wh.status)}">${escapeHTML(wh.status)}</span></p>
-                <p><strong>Time:</strong> ${new Date(wh.timestamp).toLocaleString()}</p>
-                <p><strong>Source IP:</strong> ${escapeHTML(wh.sourceIp || wh.source_ip || 'unknown')}</p>
-            </div>
-            <div class="detail-section">
-                <h3>Headers</h3>
-                <pre>${escapeHTML(JSON.stringify(wh.headers, null, 2))}</pre>
-            </div>
-            <div class="detail-section">
-                <h3>Body</h3>
-                <pre>${wh.body ? escapeHTML(JSON.stringify(wh.body, null, 2)) : '(empty)'}</pre>
-            </div>
-            ${wh.query && Object.keys(wh.query).length > 0 ? `
-            <div class="detail-section">
-                <h3>Query Parameters</h3>
-                <pre>${escapeHTML(JSON.stringify(wh.query, null, 2))}</pre>
-            </div>` : ''}
-            <div class="btn-group">
-                <button class="btn btn-primary" onclick="replayWebhook('${escapeHTML(wh.id)}', event)">🔄 Replay</button>
-                <button class="btn btn-danger" onclick="deleteWebhook('${escapeHTML(wh.id)}', event)">🗑️ Delete</button>
-            </div>`;
-
-        detailEl.classList.add('active');
-        detailEl.scrollIntoView({ behavior: 'smooth' });
-    } catch (err) {
-        console.error('Failed to load webhook detail:', err);
-        alert(`Error loading detail: ${err.message}`);
+    if (detailEl.classList.contains('active')) {
+        detailEl.classList.remove('active');
+        iconEl.classList.remove('open');
+        if (cardEl) cardEl.classList.remove('open');
+        return;
     }
+
+    if (!detailEl.dataset.loaded) {
+        try {
+            const response = await fetch(`/api/webhooks/${id}`);
+            if (!response.ok) throw new Error('Webhook not found');
+            const json = await response.json();
+            const wh = json.data;
+
+            // Safe rendering with escapeHTML for untrusted, dynamic inputs
+            detailEl.innerHTML = `
+                <div class="detail-section">
+                    <h3>Webhook Info</h3>
+                    <p><strong>ID:</strong> ${escapeHTML(wh.id)}</p>
+                    <p><strong>Relay:</strong> /w/${escapeHTML(wh.relayId || wh.relay_id)}</p>
+                    <p><strong>Method:</strong> ${escapeHTML(wh.method)}</p>
+                    <p><strong>Status:</strong> <span class="webhook-status status-${escapeHTML(wh.status)}">${escapeHTML(wh.status)}</span></p>
+                    <p><strong>Time:</strong> ${new Date(wh.timestamp).toLocaleString()}</p>
+                    <p><strong>Source IP:</strong> ${escapeHTML(wh.sourceIp || wh.source_ip || 'unknown')}</p>
+                </div>
+                <div class="detail-section">
+                    <h3>Headers</h3>
+                    <pre>${escapeHTML(JSON.stringify(wh.headers, null, 2))}</pre>
+                </div>
+                <div class="detail-section">
+                    <h3>Body</h3>
+                    <pre>${wh.body ? escapeHTML(JSON.stringify(wh.body, null, 2)) : '(empty)'}</pre>
+                </div>
+                ${wh.query && Object.keys(wh.query).length > 0 ? `
+                <div class="detail-section">
+                    <h3>Query Parameters</h3>
+                    <pre>${escapeHTML(JSON.stringify(wh.query, null, 2))}</pre>
+                </div>` : ''}
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="replayWebhook('${escapeHTML(wh.id)}', event)">🔄 Replay</button>
+                    <button class="btn btn-danger" onclick="deleteWebhook('${escapeHTML(wh.id)}', event)">🗑️ Delete</button>
+                </div>`;
+            detailEl.dataset.loaded = "true";
+        } catch (err) {
+            console.error('Failed to load webhook detail:', err);
+            alert(`Error loading detail: ${err.message}`);
+            return;
+        }
+    }
+
+    detailEl.classList.add('active');
+    iconEl.classList.add('open');
+    if (cardEl) cardEl.classList.add('open');
 }
 
 
 // Delete a webhook
 async function deleteWebhook(id, event) {
     if (!confirm('Delete this webhook?')) return;
-    
+
     // UI Safeguard: Loading feedback & preventing double clicks
     const btn = event.target;
     const originalText = btn.innerHTML;
@@ -104,12 +119,11 @@ async function deleteWebhook(id, event) {
         const response = await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to delete`);
 
-        detailEl.classList.remove('active');
         await fetchWebhooks(currentPage);
     } catch (err) {
         console.error('Failed to delete webhook:', err);
         alert(`Failed to delete webhook: ${err.message}`);
-        
+
         // Reset button on failure
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -133,7 +147,7 @@ async function replayWebhook(id, event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ target_url: targetUrl })
         });
-        
+
         const result = await response.json();
         if (!response.ok) throw new Error(result.message || `Server returned ${response.status}`);
 
@@ -163,18 +177,24 @@ function renderWebhooks(webhooks) {
     }
 
     listEl.innerHTML = webhooks.map(wh => `
-        <div class="webhook-card" onclick="showDetail('${escapeHTML(wh.id)}')">
-            <div class="webhook-card-header">
-                <div>
-                    <span class="webhook-method">${escapeHTML(wh.method)}</span>
-                    <span class="webhook-relay">/w/${escapeHTML(wh.relayId || wh.relay_id)}</span>
+        <div class="webhook-container" style="margin-bottom: 0.75rem;">
+            <div class="webhook-card" id="card-${escapeHTML(wh.id)}" onclick="toggleDetail('${escapeHTML(wh.id)}')">
+                <div class="webhook-card-header">
+                    <div>
+                        <span class="webhook-method">${escapeHTML(wh.method)}</span>
+                        <span class="webhook-relay">/w/${escapeHTML(wh.relayId || wh.relay_id)}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="webhook-status status-${escapeHTML(wh.status)}">${escapeHTML(wh.status)}</span>
+                        <svg class="toggle-icon" id="icon-${escapeHTML(wh.id)}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
                 </div>
-                <span class="webhook-status status-${escapeHTML(wh.status)}">${escapeHTML(wh.status)}</span>
+                <div style="display: flex; justify-content: space-between;">
+                    <span class="webhook-id">${escapeHTML(wh.id)}</span>
+                    <span class="webhook-time">${escapeHTML(formatTime(wh.timestamp))}</span>
+                </div>
             </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span class="webhook-id">${escapeHTML(wh.id)}</span>
-                <span class="webhook-time">${escapeHTML(formatTime(wh.timestamp))}</span>
-            </div>
+            <div id="detail-${escapeHTML(wh.id)}" class="detail-panel"></div>
         </div>
     `).join('');
 }
@@ -205,5 +225,38 @@ function formatTime(isoString) {
     return date.toLocaleDateString();
 }
 
+// Clearing all webhooks
+async function clearAllWebhooks() {
+    // Takes confirmation from user if they really want to delete everything
+    if (!confirm('Are you sure you want to permanently delete ALL webhooks? This cannot be undone.')) {
+        return;
+    }
+
+    // UI Feedback: Change the button state while we wait for the server
+    const btn = document.getElementById('clear-all-btn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Clearing...';
+
+    try {
+        // Hit the delete endpoint
+        const response = await fetch('/api/webhooks', { method: 'DELETE' });
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        // Force the dashboard to refresh and show the empty state
+        await fetchWebhooks(1);
+
+    } catch (err) {
+        console.error('Failed to clear database:', err);
+        alert(`Failed to clear database: ${err.message}`);
+    } finally {
+        // Restore the button back to normal
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
 // Initial Load
 fetchWebhooks(1);

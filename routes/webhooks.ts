@@ -91,4 +91,14 @@ router.delete('/webhooks/:id', async (req: Request, res: Response, next: NextFun
     }
 });
 
+
+// Function to delete all webhooks
+router.delete('/webhooks', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await db.deleteAll();
+        res.status(204).end();
+    } catch (error) {
+        next(error);
+    }
+})
 export default router;

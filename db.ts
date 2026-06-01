@@ -1,10 +1,27 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+
+// Creating the folder in the user's home directory
+const dbFolder = path.join(os.homedir(), 'webhookforge');
+const dbPath = path.join(dbFolder, 'webhooks.db');
+
+// Ensuring that the folder exists before Prisma tries to use the folder
+if (!fs.existsSync(dbFolder)) {
+    fs.mkdirSync(dbFolder, { recursive: true })
+}
 
 const prisma = new PrismaClient({
-    log: ['error'], 
+    log: ['error'],
+    datasources: {
+        db: {
+            url: `file:${dbPath}`
+        }
+    }
 });
 
-console.log('[DB] SQLite database initialized');
+console.log(`[DB] SQLite database initialized at: ${dbPath}`);
 
 // Interface for the webhook
 export interface WebhookInput {
@@ -13,6 +30,7 @@ export interface WebhookInput {
     method: string;
     headers: Record<string, unknown>;
     body?: Record<string, unknown> | null;
+    rawBody?: string | null;
     query?: Record<string, unknown> | null;
     source_ip: string | null;
     timestamp: string;
@@ -23,7 +41,7 @@ interface DbResult {
     changes: number;
 }
 
-// ── Helper: Parse SQLite Strings back to JSON ──
+// Parse SQLite Strings back to JSON 
 function formatWebhookData(webhook: any) {
     if (!webhook) return null;
     return {
@@ -31,6 +49,7 @@ function formatWebhookData(webhook: any) {
         headers: webhook.headers ? JSON.parse(webhook.headers) : {},
         body: webhook.body ? JSON.parse(webhook.body) : null,
         query: webhook.query ? JSON.parse(webhook.query) : null,
+        reawBody: webhook.rawBody || null,
     };
 }
 
@@ -44,6 +63,7 @@ export async function insert(webhook: WebhookInput): Promise<DbResult> {
             // Convert JSON objects to strings for SQLite
             headers: JSON.stringify(webhook.headers),
             body: webhook.body ? JSON.stringify(webhook.body) : undefined,
+            rawBody: webhook.rawBody || undefined,
             query: webhook.query ? JSON.stringify(webhook.query) : undefined,
             sourceIp: webhook.source_ip,
             timestamp: new Date(webhook.timestamp),
@@ -97,6 +117,17 @@ export async function deleteById(id: string): Promise<DbResult> {
     }
 }
 
+// Function to delete all webhooks
+export async function deleteAll(): Promise<DbResult> {
+    try {
+        const result = await prisma.webhook.deleteMany({});
+        return { changes: result.count };
+    } catch (err) {
+        console.error('[DB] Failed to delete all webhooks', err);
+        throw err;
+    }
+}
+
 // Function to get total count of all webhooks 
 export async function count(): Promise<number> {
     return await prisma.webhook.count();
@@ -125,4 +156,29 @@ export async function updateStatus(id: string, status: string): Promise<DbResult
     }
 }
 
+try {
+    await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "webhooks" (
+            "id" TEXT NOT NULL PRIMARY KEY,
+            "relay_id" TEXT NOT NULL,
+            "method" TEXT NOT NULL DEFAULT 'POST',
+            "headers" TEXT NOT NULL,
+            "body" TEXT,
+            "rawBody" TEXT,
+            "query" TEXT,
+            "source_ip" TEXT,
+            "timestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "status" TEXT NOT NULL DEFAULT 'received'
+        );
+    `);
+    await prisma.$executeRawUnsafe(`
+        CREATE INDEX IF NOT EXISTS "webhooks_relay_id_idx" ON "webhooks"("relay_id");
+    `);
+    await prisma.$executeRawUnsafe(`
+        CREATE INDEX IF NOT EXISTS "webhooks_timestamp_idx" ON "webhooks"("timestamp" DESC);
+    `);
+    console.log('[DB] Database schema verified successfully.');
+} catch (error) {
+    console.error('\n [DB] Failed to verify schema. Error:', error);
+}
 export const raw = prisma;
