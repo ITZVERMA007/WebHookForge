@@ -2,7 +2,7 @@
 
 A local CLI tool for catching, inspecting, and replaying webhooks during development.
 
-No tunnels. No config files. No noise.
+Zero-config tunnels. No `.env` files. No noise.
 
 ---
 
@@ -16,18 +16,19 @@ WebHookForge gives you a third option — spin up a local relay server, open the
 
 ## Features
 
-- **No setup required** — backed by SQLite. No `.env` files, no Docker, no external database.
-- **Live dashboard** — webhooks appear in your browser the moment they arrive, streamed over WebSocket.
-- **Replay any request** — re-trigger any saved payload against your backend whenever you need to.
-- **Resilient connection** — exponential backoff reconnection, heartbeats, and payload size limiting built in.
-- **Clean CLI** — built with Commander.js, works exactly how you'd expect a CLI tool to work.
+- **Zero-Config Tunnels** — Automatically provisions a secure, public HTTPS tunnel via Ngrok so external APIs can reach your local machine instantly.
+- **The Raw Network Truth** — Captures the exact HTTP headers, raw JSON bodies, and cryptographic signatures (e.g., `Stripe-Signature`) so you know exactly what is hitting your server.
+- **Live WebSocket Dashboard** — Webhooks appear in your browser the millisecond they arrive. No refreshing required.
+- **One-Click Replay** — Re-trigger any saved payload against your actual backend logic whenever you need to.
+- **Resilient Storage** — Backed by a local SQLite database. Restart your computer without losing your test data, and wipe the database clean with one click when you are done.
+- **Clean CLI** — Built with Commander.js. Background UI traffic is silenced so your terminal only shows the logs that matter.
 
 ---
 
 ## Installation
 
 ```bash
-npm install -g webhookforge-parth
+npm install -g webhookforge
 ```
 
 ---
@@ -54,6 +55,8 @@ Open `http://localhost:3000` in your browser to see the dashboard.
 webhookforge listen --port <number>   Run on a custom port (default: 3000)
 webhookforge --help                   Show available commands
 webhookforge --version                Show the installed version
+webhookforge auth <your-token>        Token to create the Ngrok tunnel 
+webhookforge clear                    This is used to remove all webhooks stored
 ```
 
 ---
@@ -62,4 +65,4 @@ webhookforge --version                Show the installed version
 
 MIT
 
-[![npm version](https://img.shields.io/npm/v/webhookforge-parth.svg?style=flat-square)](https://www.npmjs.com/package/webhookforge-parth)
+[![npm version](https://img.shields.io/npm/v/webhookforge.svg?style=flat-square)](https://www.npmjs.com/package/webhookforge)

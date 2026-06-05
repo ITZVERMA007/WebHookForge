@@ -1,6 +1,6 @@
 {
-  "name": "webhookforge-parth",
-  "version": "1.0.1",
+  "name": "webhookforge",
+  "version": "1.0.3",
   "description": "A webhook relay and debugger",
   "main": "dist/server.js",
   "bin": {
@@ -11,7 +11,7 @@
     "dev": "tsx watch server.ts",
     "build": "tsc",
     "start:prod": "node dist/cli.js listen",
-    "postinstall": "prisma generate"
+    "postinstall": "npx prisma generate"
   },
   "keywords": [
     "webhook",
@@ -24,6 +24,7 @@
   "dependencies": {
     "@ngrok/ngrok": "^1.7.0",
     "@prisma/client": "^6.19.3",
+    "prisma": "^6.19.3",
     "commander": "^14.0.3",
     "express": "^5.2.1",
     "uuid": "^14.0.0",
@@ -33,7 +34,6 @@
     "@types/express": "^5.0.0",
     "@types/node": "^20.0.0",
     "@types/ws": "^8.18.1",
-    "prisma": "^6.19.3",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   },

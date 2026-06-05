@@ -7,6 +7,9 @@ import os from 'os';
 const dbFolder = path.join(os.homedir(), 'webhookforge');
 const dbPath = path.join(dbFolder, 'webhooks.db');
 
+// Ensuring SQLite url uses forward slashes so prisma doesn't break on windows
+const prismaUrl = `file:${dbPath.replace(/\\/g, '/')}`;
+
 // Ensuring that the folder exists before Prisma tries to use the folder
 if (!fs.existsSync(dbFolder)) {
     fs.mkdirSync(dbFolder, { recursive: true })
@@ -16,12 +19,41 @@ const prisma = new PrismaClient({
     log: ['error'],
     datasources: {
         db: {
-            url: `file:${dbPath}`
+            url: prismaUrl
         }
     }
 });
 
-console.log(`[DB] SQLite database initialized at: ${dbPath}`);
+const dbReady = (async () => {
+    try {
+        await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "webhooks" (
+            "id" TEXT NOT NULL PRIMARY KEY,
+            "relay_id" TEXT NOT NULL,
+            "method" TEXT NOT NULL DEFAULT 'POST',
+            "headers" TEXT NOT NULL,
+            "body" TEXT,
+            "rawBody" TEXT,
+            "query" TEXT,
+            "source_ip" TEXT,
+            "timestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "status" TEXT NOT NULL DEFAULT 'received'
+        );
+    `);
+        await prisma.$executeRawUnsafe(`
+        CREATE INDEX IF NOT EXISTS "webhooks_relay_id_idx" ON "webhooks"("relay_id");
+    `);
+        await prisma.$executeRawUnsafe(`
+        CREATE INDEX IF NOT EXISTS "webhooks_timestamp_idx" ON "webhooks"("timestamp" DESC);
+    `);
+
+        await prisma.$disconnect();
+        await prisma.$connect();
+    } catch (error) {
+        console.error('\n [DB] Failed to verify schema. Error:', error);
+    }
+})(); // Immediately Invoked Function Expression
+
 
 // Interface for the webhook
 export interface WebhookInput {
@@ -49,12 +81,13 @@ function formatWebhookData(webhook: any) {
         headers: webhook.headers ? JSON.parse(webhook.headers) : {},
         body: webhook.body ? JSON.parse(webhook.body) : null,
         query: webhook.query ? JSON.parse(webhook.query) : null,
-        reawBody: webhook.rawBody || null,
+        rawBody: webhook.rawBody || null,
     };
 }
 
 // Function to insert a new webhook into the database
 export async function insert(webhook: WebhookInput): Promise<DbResult> {
+    await dbReady;
     await prisma.webhook.create({
         data: {
             id: webhook.id,
@@ -75,6 +108,7 @@ export async function insert(webhook: WebhookInput): Promise<DbResult> {
 
 // Function to get all webhooks with pagination
 export async function getAll(limit: number = 20, offset: number = 0) {
+    await dbReady;
     const webhooks = await prisma.webhook.findMany({
         orderBy: { timestamp: 'desc' },
         take: limit,
@@ -85,6 +119,7 @@ export async function getAll(limit: number = 20, offset: number = 0) {
 
 // Function to get webhook by its id
 export async function getById(id: string) {
+    await dbReady;
     const webhook = await prisma.webhook.findUnique({
         where: { id },
     });
@@ -93,6 +128,7 @@ export async function getById(id: string) {
 
 // Function to get all webhooks for a specific relay ID
 export async function getByRelayId(relayId: string, limit: number = 20, offset: number = 0) {
+    await dbReady;
     const webhooks = await prisma.webhook.findMany({
         where: { relayId },
         orderBy: { timestamp: 'desc' },
@@ -104,6 +140,7 @@ export async function getByRelayId(relayId: string, limit: number = 20, offset: 
 
 // Function to delete a webhook by its ID
 export async function deleteById(id: string): Promise<DbResult> {
+    await dbReady;
     try {
         await prisma.webhook.delete({
             where: { id },
@@ -119,6 +156,7 @@ export async function deleteById(id: string): Promise<DbResult> {
 
 // Function to delete all webhooks
 export async function deleteAll(): Promise<DbResult> {
+    await dbReady;
     try {
         const result = await prisma.webhook.deleteMany({});
         return { changes: result.count };
@@ -130,11 +168,13 @@ export async function deleteAll(): Promise<DbResult> {
 
 // Function to get total count of all webhooks 
 export async function count(): Promise<number> {
+    await dbReady;
     return await prisma.webhook.count();
 }
 
 // Function to get total count for a relayId
 export async function countByRelayId(relayId: string) {
+    await dbReady;
     return await prisma.webhook.count({
         where: { relayId }
     })
@@ -142,6 +182,7 @@ export async function countByRelayId(relayId: string) {
 
 // Function to update the status of a webhook
 export async function updateStatus(id: string, status: string): Promise<DbResult> {
+    await dbReady;
     try {
         await prisma.webhook.update({
             where: { id },
@@ -156,29 +197,4 @@ export async function updateStatus(id: string, status: string): Promise<DbResult
     }
 }
 
-try {
-    await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS "webhooks" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "relay_id" TEXT NOT NULL,
-            "method" TEXT NOT NULL DEFAULT 'POST',
-            "headers" TEXT NOT NULL,
-            "body" TEXT,
-            "rawBody" TEXT,
-            "query" TEXT,
-            "source_ip" TEXT,
-            "timestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "status" TEXT NOT NULL DEFAULT 'received'
-        );
-    `);
-    await prisma.$executeRawUnsafe(`
-        CREATE INDEX IF NOT EXISTS "webhooks_relay_id_idx" ON "webhooks"("relay_id");
-    `);
-    await prisma.$executeRawUnsafe(`
-        CREATE INDEX IF NOT EXISTS "webhooks_timestamp_idx" ON "webhooks"("timestamp" DESC);
-    `);
-    console.log('[DB] Database schema verified successfully.');
-} catch (error) {
-    console.error('\n [DB] Failed to verify schema. Error:', error);
-}
 export const raw = prisma;

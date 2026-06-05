@@ -18,3 +18,7 @@ dist/
 # System Debris
 .DS_Store
 *.log
+
+WEBHOOKFORGE_WALKTHROUGH.md
+INTERVIEW_PREP.md
+README.md

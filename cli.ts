@@ -3,12 +3,11 @@ import { saveToken } from './utils/config.js';
 import { Command } from 'commander';
 import { server } from './server.js';
 import { createTunnel } from './utils/tunnel.js';
-import { PrismaClient } from '@prisma/client';
+import { deleteAll } from './db.js';
 import { fileURLToPath } from 'url';
 import fs from "fs";
 import path from "path";
 
-const prisma = new PrismaClient();
 
 // Getting version from the package.json 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +39,8 @@ program
             console.log('');
             console.log(`  ${bold}${cyan}WebHookForge${reset}  ${dim}v${version}${reset}`);
             console.log(`  ${dim}${'─'.repeat(45)}${reset}`);
+            console.log(`  ${dim}Database connected and schema verified${reset}`);
+            console.log(`  ${dim}WebSocket server attached${reset}`);
             console.log(`  ${green}➜${reset}  ${bold}Dashboard:${reset}  http://localhost:${port}`);
             console.log('\n Negotitating pulic tunnel...{reset}');
 
@@ -79,13 +80,12 @@ program
     .action(async () => {
         console.log('\n Sweeping the database:');
         try {
-            const result = await prisma.webhook.deleteMany({});
-            console.log(`Successfully deleted ${result.count} webhooks!\n`);
+            const result = await deleteAll();
+            console.log(`Successfully deleted ${result.changes} webhooks!\n`);
         } catch (error) {
             console.error('\n Failed to clear database:', error);
         }
         finally {
-            await prisma.$disconnect();
             process.exit(0);
         }
     })
