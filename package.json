@@ -10,6 +10,8 @@
     "start": "node dist/cli.js listen",
     "dev": "tsx watch server.ts",
     "build": "tsc",
+    "prepublishOnly": "node -e \"require('fs').copyFileSync('README-NPM.md', 'README.md')\"",
+    "postpublish": "git restore README.md",
     "start:prod": "node dist/cli.js listen",
     "postinstall": "npx prisma generate"
   },
