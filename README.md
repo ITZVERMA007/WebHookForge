@@ -1,4 +1,4 @@
-# WebHookForge 🚀
+# WebHookForge 
 
 [![npm version](https://img.shields.io/npm/v/webhookforge.svg?style=flat-square)](https://www.npmjs.com/package/webhookforge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
