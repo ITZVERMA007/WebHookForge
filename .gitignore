@@ -4,7 +4,6 @@ node_modules/
 # Environments & Leftovers
 .env
 /generated/
-WEBHOOKFORGE_BUILD_GUIDE.md
 
 # Build Output
 dist/
