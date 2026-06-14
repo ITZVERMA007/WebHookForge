@@ -1,7 +1,6 @@
 # WebHookForge 🪝
 
 [![npm version](https://img.shields.io/npm/v/webhookforge.svg?style=flat-square)](https://www.npmjs.com/package/webhookforge)
-[![npm downloads](https://img.shields.io/npm/dm/webhookforge?style=flat-square&color=green)](https://www.npmjs.com/package/webhookforge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=flat-square)](https://nodejs.org)
 
